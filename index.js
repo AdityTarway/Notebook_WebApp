@@ -13,15 +13,36 @@ app.use(express.static(path.join(__dirname,"public")));
 app.get('/', function(req,res){
     fs.readdir(`./files`, function(err, files){
         res.render('index',{files: files});
-    })
-    
+    }) 
 })
 
 app.get('/files/:filename', function(req,res) {
     fs.readFile(`./files/${req.params.filename}`,"utf-8", function(err,filedata){
-        res.render('show',{filename: req.params.filename, filedata: filedata});
+        res.render('show', {filename: req.params.filename, filedata: filedata});
     })
 })
+
+app.get('/edit/:filename', function(req,res) {
+    res.render('edit', {filename: req.params.filename});
+})
+
+app.post('/edit', function(req, res) {
+    const previousName = req.body.Previous.trim();
+    const newName = req.body.New.trim();
+
+    if (!previousName || !newName) {
+        return res.status(400).send("Previous name and new name are required.");
+    }
+
+    fs.rename(`./files/${previousName}`, `./files/${newName}`, function(err) {
+        if (err) {
+            console.error("Error renaming file:", err);
+            return res.status(500).send("Failed to rename file. Please try again.");
+        }
+        res.redirect("/");
+    });
+});
+
 
 
 app.post('/create', function(req, res){
